@@ -42,7 +42,7 @@ def gen_points_line(x, z, num=50):
 """
 if __name__=="__main__":
     c = MotionController()
-    cam = Snapshotter("http://ender3.local/webcam/")
+    cam = Snapshotter("http://localhost/webcam")
 
     # Per Point
     exposures=[25, 50, 100, 500, 1000, 10000]

@@ -64,19 +64,17 @@ class MjpgSnapshotterExp(MjpgSnapshotter):
 
 	def _ssh_command(self, cmd):
 		"""Send ssh command to host"""
+
+		if self.ssh_str is None:
+			command = cmd.split()
+		else:
+			command = [ "ssh", self.ssh_str, cmd ]
+
 		try:
-			return subprocess.check_output([
-					"ssh",
-					self.ssh_str,
-					cmd
-				]).decode()
+			return subprocess.check_output(command).decode()
 		except subprocess.CalledProcessError:
 			time.sleep(0.5)
-			return subprocess.check_output([
-					"ssh",
-					self.ssh_str,
-					cmd
-				]).decode()
+			return subprocess.check_output(command).decode()
 	
 	def set_exposure(self, value, wait=True):
 		"""Set the exposure using -cexposure=value
