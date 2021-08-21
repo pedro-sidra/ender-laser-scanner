@@ -22,6 +22,9 @@ class MotionController():
 		self.open=True
 		self.serial.__enter__()
 
+		if self.disable_temp:
+			self.send_command("M155 S0")
+
 	def __exit__(self, *args, **kwargs):
 		self.open=False
 		self.serial.__exit__(*args,**kwargs)
