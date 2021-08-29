@@ -1,4 +1,6 @@
 import requests
+from threading import Thread
+from collections import deque
 import subprocess
 import time
 import shutil
@@ -49,9 +51,9 @@ class MjpgSnapshotterExp(MjpgSnapshotter):
 		and can send camera parameter commands by SSH connection using `ssh_str`
 
 		Always uses the first available camera from v4l2-ctl
-		@param url url hosting the webcam API
+		:param url:url hosting the webcam API
 		@snapshot_params params to use at the API to the webcam
-		@param rgb whether to convert the image from opencv's BGR to matplotlib's RGB
+		:param rgb:whether to convert the image from opencv's BGR to matplotlib's RGB
 		@ssh_str acess str to use for ssh e.g. pi@ender3.local
 		"""
 		super().__init__(url, snapshot_params=snapshot_params, rgb=rgb)
@@ -78,7 +80,7 @@ class MjpgSnapshotterExp(MjpgSnapshotter):
 	
 	def set_exposure(self, value, wait=True):
 		"""Set the exposure using -cexposure=value
-		@param wait whether to wait a bit before returning for exposure to register"""
+		:param wait:whether to wait a bit before returning for exposure to register"""
 		ret =  self._ssh_command(f"v4l2-ctl -cexposure_absolute={value}")
 		if wait:
 			time.sleep(0.5)
@@ -86,7 +88,7 @@ class MjpgSnapshotterExp(MjpgSnapshotter):
 
 	def set_gain(self, value, wait=True):
 		"""Set the gain using -cgain=value
-		@param wait whether to wait before returning for gain to register"""
+		:param wait:whether to wait before returning for gain to register"""
 		ret =  self._ssh_command(f"v4l2-ctl -cgain={value}")
 		if wait:
 			time.sleep(0.5)
@@ -101,9 +103,65 @@ class MjpgSnapshotterExp(MjpgSnapshotter):
 		"""Return list of available flags from v4l2-ctl"""
 		return self._ssh_command("v4l2-ctl --all").split("Flags:")[-1]
 
+class GstSnapshotter():
+	"""Uses an opencv camera to take snapshots, using the gstreamer backend. Can configure camera parameters via v4l2
+	"""
+	def __init__(self, gst_params="v4l2src ! video/x-raw,framerate=5/1, width=(int)960,height=(int)720 ! videoconvert ! appsink max-buffers=1 drop=true",
+				 *args, **kwargs):
+		"""Init a `cv2.VideoCapture` via gstreamer, disable all automatic parameters
+		:param gst_params: params to pass to gstreamer for video stream initialization
+		"""
 
-print()
-print()
+		self.cap = cv2.VideoCapture(gst_params, apiPreference=cv2.CAP_GSTREAMER)
+
+		self._v4l_command(" -c".join(["white_balance_temperature_auto=0",
+		                   			  "exposure_auto=1",
+									  "exposure_auto_priority=0",
+									  "white_balance_temperature=0"]))
+	
+	def _v4l_command(self, params, retry=1):
+		"""Call v4l2-ctl with the given params, if an error happens retry `retry` times
+		:param params:args to pass to v4l2-ctl (try `v4l2-ctl --help`)
+		:param retry: times to retry operation"""
+
+		command = ["v4l2-ctl"]
+		command.extend(params.split())
+		print(f"running {' '.join(command)}")
+
+		for i in range(retry+1):
+			try:
+				return subprocess.check_output(command).decode()
+			except subprocess.CalledProcessError: # If a problem happens, just try again once
+				time.sleep(0.2)
+	
+	def __enter__(self):
+		pass
+
+	def __exit__(self, *args, **kwargs):
+		pass
+
+	def read(self, retries=1):
+		"""Try to read from snapshotter
+		:param retries: times to retry"""
+		for i in range(retries+1):
+			try:
+				return self.cap.read()
+			except:
+				time.sleep(1)
+
+	def set_exposure(self, value, wait=True):
+		"""Set the exposure using -cexposure=value
+		:param wait:whether to wait a bit before returning for exposure to register"""
+		self._v4l_command(f"-cexposure_absolute={value}")
+		if wait:
+			time.sleep(0.5)
+
+	def set_gain(self, value, wait=True):
+		"""Set the gain using -cgain=value
+		:param wait:whether to wait before returning for gain to register"""
+		self._v4l_command(f"-cgain={value}")
+		if wait:
+			time.sleep(0.5)
 
 
 if __name__=="__main__":

@@ -86,3 +86,27 @@ class MotionController():
 		command = f"G0{x_str}{y_str}{z_str}"
 		self.send_command(command)
 		self.send_command("M114")
+
+class FakeMotionController():
+	"""Used as a fake MotionController"""
+	def __init__(self, port="/dev/ttyUSB0",baud=115200, disable_temp_report = True, *args, **kwargs) -> None:
+		""" """
+		pass
+	   
+	def __enter__(self, *args, **kwargs):
+		pass
+
+	def __exit__(self, *args, **kwargs):
+		pass
+	   
+	def send(self, command):
+		pass
+
+	def read(self):
+		pass
+
+	def send_command(self, command, wait_ok=True):
+		pass
+
+	def move_to(self, x=None, y=None, z=None):
+		pass
