@@ -7,6 +7,7 @@ and taking snapshots with a `Snapshotter`
 import snapshot
 import json
 from os.path import join
+import subprocess
 from pathlib import Path
 import pty, os 
 import argparse
@@ -146,30 +147,32 @@ if __name__=="__main__":
 
         for i, p in enumerate(points):
 
-            # # ------ MOVE TO THE POINT
-            # motion.move_to(*p)
-            # print(f"point={p}")
+            # ------ MOVE TO THE POINT
+            motion.move_to(*p)
+            print(f"point={p}")
 
-            # # ------ TAKE PICTURES FOR EACH EXPOSURE
-            # pics = []
-            # ret, pic = cam.read()
-            # for e in exposures:
-            #     cam.set_exposure(e)
-            #     print(f"\texposure={e}")
-            #     ret, pic = cam.read()
-            #     pics.append(pic)
+            # ------ TAKE PICTURES FOR EACH EXPOSURE
+            pics = []
+            ret, pic = cam.read()
+            for e in exposures:
+                cam.set_exposure(e, wait=1)
+                print(f"\texposure={e}")
+                ret, pic = cam.read()
+                pics.append(pic)
             
-            # # ------ SAVE EXPOSURES
-            # if args.save_exps:
-            #     for i_exp, pic in enumerate(pics):
-            #         cv2.imwrite(join(outpath, "exposures", f"{i}_exposure{i_exp}.png"), pic)
+            # ------ SAVE EXPOSURES
+            if args.save_exps:
+                for i_exp, pic in enumerate(pics):
+                    cv2.imwrite(join(outpath, "exposures", f"{i}_exposure{i_exp}.png"), pic)
 
-            # # ------ MAKE HDR PICTURE AND SAVE
-            # pic = hdr(pics, exposures)
+            # ------ MAKE HDR PICTURE AND SAVE
+            pic = hdr(pics, exposures)
             filename= f"{i}.png"
-            # cv2.imwrite(join(outpath, filename), pic)
+            cv2.imwrite(join(outpath, filename), pic)
 
             img_coords[filename] = p
     
     with open(join(outpath,"points.json"), "w") as f:
         f.write(json.dumps(img_coords))
+
+    print(subprocess.check_output(f"zip -r {outpath}.zip {outpath}".split()))
