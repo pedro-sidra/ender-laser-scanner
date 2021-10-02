@@ -1,13 +1,14 @@
-from calib import calibrate_charuco
-from utils import load_coefficients, save_coefficients
+from calib import calibrate_charuco, load_coefficients, save_coefficients
 import cv2
 
 # Parameters
-IMAGES_DIR = r'C:\Users\Pedro\Desktop\TCC\Code\Imagens\setupEnder_v0'
+IMAGES_DIR = r'/home/freitas/TCC/ender-laser-scanner/pics/calibref'
 IMAGES_FORMAT = 'jpg'
 # Dimensions in cm
-MARKER_LENGTH = 2.1
-SQUARE_LENGTH = 3.5
+MARKER_LENGTH = 18
+SQUARE_LENGTH = 25
+
+SIZE = (8,8)
 
 
 # Calibrate 
@@ -25,7 +26,7 @@ save_coefficients(mtx, dist, "calibration_charuco.yml")
 # Load coefficients
 mtx, dist = load_coefficients('calibration_charuco.yml')
 
-path = r"C:\Users\Pedro\Desktop\TCC\Code\Imagens\setupEnder_v0\img_6.jpg"
+path = r"/home/freitas/TCC/ender-laser-scanner/pics/calibref/WIN_20210901_21_41_26_Pro.jpg"
 
 original = cv2.imread(path)
 dst = cv2.undistort(original, mtx, dist, None, mtx)
