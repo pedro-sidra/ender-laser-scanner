@@ -2,8 +2,11 @@ import numpy as np
 import cv2
 import pickle
 import cv2.aruco as aruco
+# import matplotlib
 # import matplotlib.pyplot as plt
 import pathlib
+
+# matplotlib.use("Qt5Agg")
 
 # plt.rcParams['figure.constrained_layout.use'] = True
 # plt.rcParams['image.cmap'] = 'gray'
@@ -53,6 +56,10 @@ def calibrate_charuco(dirpath, image_format, marker_length, square_length, prior
         if prior is not None:
             mtx_pr, dist_pr = prior
             img_gray = cv2.undistort(img_gray, mtx_pr, dist_pr, None, mtx_pr)
+        
+        print(img)
+        # cv2.imshow("TEST", img_gray)
+        # cv2.waitKey(-1)
 
         corners, ids, rejected = aruco.detectMarkers(
             img_gray, 

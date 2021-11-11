@@ -2,8 +2,8 @@ from calib import calibrate_charuco, load_coefficients, save_coefficients
 import cv2
 
 # Parameters
-IMAGES_DIR = r'/home/freitas/TCC/ender-laser-scanner/pics/calibref'
-IMAGES_FORMAT = 'jpg'
+IMAGES_DIR = r'/home/freitas/TCC/calib/'
+IMAGES_FORMAT = 'png'
 # Dimensions in cm
 MARKER_LENGTH = 18
 SQUARE_LENGTH = 25
@@ -26,12 +26,13 @@ save_coefficients(mtx, dist, "calibration_charuco.yml")
 # Load coefficients
 mtx, dist = load_coefficients('calibration_charuco.yml')
 
-path = r"/home/freitas/TCC/ender-laser-scanner/pics/calibref/WIN_20210901_21_41_26_Pro.jpg"
+path = r"/home/freitas/TCC/calib/image24.png"
 
 original = cv2.imread(path)
 dst = cv2.undistort(original, mtx, dist, None, mtx)
-cv2.imshow("Img", dst)
-cv2.waitKey()
+# cv2.imshow("Img", dst)
+cv2.imwrite("undistort.png", dst)
+# cv2.waitKey()
 
 
 # With prior
@@ -41,7 +42,7 @@ ret, mtx, dist, rvecs, tvecs = calibrate_charuco(
     MARKER_LENGTH,
     SQUARE_LENGTH,
     prior = (mtx, dist),
-    plot=True
+    #plot=True
 )
 print(ret)
-save_coefficients(mtx, dist, "calibration_charuco.yml")
+save_coefficients(mtx, dist, "prior_calibration_charuco.yml")

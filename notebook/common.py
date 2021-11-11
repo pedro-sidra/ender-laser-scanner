@@ -111,16 +111,25 @@ def set_axes_equal(ax):
     ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])
     ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
 
-def plot_axes(ax, M, scale=10):
+def plot_axes(ax, M, scale=10, label=False):
     # X
     tvec = M[:3,3]
     R = M[:3,:3]
     R*=scale
-    ax.quiver(tvec[0],tvec[1], tvec[2], R[0,0], R[1,0], R[2,0], color="r")
+    if label:
+        ax.quiver(tvec[0],tvec[1], tvec[2], R[0,0], R[1,0], R[2,0], color="r", label="x")
+    else:
+        ax.quiver(tvec[0],tvec[1], tvec[2], R[0,0], R[1,0], R[2,0], color="r")
     # Y
-    ax.quiver(tvec[0],tvec[1], tvec[2], R[0,1], R[1,1], R[2,1], color="g")
+    if label:
+        ax.quiver(tvec[0],tvec[1], tvec[2], R[0,1], R[1,1], R[2,1], color="g", label="y")
+    else:
+        ax.quiver(tvec[0],tvec[1], tvec[2], R[0,1], R[1,1], R[2,1], color="g")
     # Z
-    ax.quiver(tvec[0],tvec[1], tvec[2], R[0,2], R[1,2], R[2,2], color="b")
+    if label:
+        ax.quiver(tvec[0],tvec[1], tvec[2], R[0,2], R[1,2], R[2,2], color="b", label="z")
+    else:
+        ax.quiver(tvec[0],tvec[1], tvec[2], R[0,2], R[1,2], R[2,2], color="b")
 
 def vec2M(rvec, tvec):
 	R, jac = cv2.Rodrigues(rvec)
