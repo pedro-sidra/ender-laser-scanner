@@ -2,11 +2,14 @@ import numpy as np
 import cv2
 import pickle
 import cv2.aruco as aruco
-import matplotlib.pyplot as plt
+# import matplotlib
+# import matplotlib.pyplot as plt
 import pathlib
 
-plt.rcParams['figure.constrained_layout.use'] = True
-plt.rcParams['image.cmap'] = 'gray'
+# matplotlib.use("Qt5Agg")
+
+# plt.rcParams['figure.constrained_layout.use'] = True
+# plt.rcParams['image.cmap'] = 'gray'
 
 def save_board(filename, board, dict_name):
     """Saves aruco board (needs dict name)
@@ -37,7 +40,7 @@ def calibrate_charuco(dirpath, image_format, marker_length, square_length, prior
     The dimensions are in cm.
     '''
     aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_1000)
-    board = aruco.CharucoBoard_create(5, 7, square_length, marker_length, aruco_dict)
+    board = aruco.CharucoBoard_create(8, 8, square_length, marker_length, aruco_dict)
     arucoParams = aruco.DetectorParameters_create()
 
     counter, corners_list, id_list = [], [], []
@@ -53,6 +56,10 @@ def calibrate_charuco(dirpath, image_format, marker_length, square_length, prior
         if prior is not None:
             mtx_pr, dist_pr = prior
             img_gray = cv2.undistort(img_gray, mtx_pr, dist_pr, None, mtx_pr)
+        
+        print(img)
+        # cv2.imshow("TEST", img_gray)
+        # cv2.waitKey(-1)
 
         corners, ids, rejected = aruco.detectMarkers(
             img_gray, 
@@ -118,19 +125,23 @@ def calibrate_charuco_local(image_gen, board, aruco_dict, prior=None, plot=False
 
         if prior is not None:
             mtx_pr, dist_pr = prior
-            img_gray = cv2.undistort(img_gray, mtx_pr, dist_pr, None, mtx_pr)
+        #     img_gray = cv2.undistort(img_gray, mtx_pr, dist_pr, None, mtx_pr)
 
         corners, ids, rejected = aruco.detectMarkers(
             img_gray, 
             aruco_dict, 
-            parameters=arucoParams
+            parameters=arucoParams,
+            cameraMatrix=mtx_pr if prior else cv2.noArray(),
+            distCoeff=dist_pr if prior else cv2.noArray(),
         )
 
         resp, charuco_corners, charuco_ids = aruco.interpolateCornersCharuco(
             markerCorners=corners,
             markerIds=ids,
             image=img_gray,
-            board=board
+            board=board,
+            cameraMatrix=mtx_pr if prior else cv2.noArray(),
+            distCoeffs=dist_pr if prior else cv2.noArray(),
         )
         if resp > 6:
             # Add these corners and ids to our calibration arrays
@@ -144,7 +155,7 @@ def calibrate_charuco_local(image_gen, board, aruco_dict, prior=None, plot=False
     # Actual calibration
     if prior is not None:
         mtx_pr, dist_pr = prior
-        img_gray = cv2.undistort(img_gray, mtx_pr, dist_pr, None, mtx_pr)
+        # img_gray = cv2.undistort(img_gray, mtx_pr, dist_pr, None, mtx_pr)
 
     ret, mtx, dist, rvecs, tvecs = aruco.calibrateCameraCharuco(
         charucoCorners=corners_list, 
@@ -152,7 +163,7 @@ def calibrate_charuco_local(image_gen, board, aruco_dict, prior=None, plot=False
         board=board, 
         imageSize=img_gray.shape, 
         cameraMatrix=mtx_pr if prior else None, 
-        distCoeffs=None,
+        distCoeffs=dist_pr if prior else None,
         flags=cv2.CALIB_USE_INTRINSIC_GUESS if prior else None)
 
     for points, img, rvec, tvec in zip(corners_list, imgs, rvecs, tvecs):
@@ -165,8 +176,10 @@ def calibrate_charuco_local(image_gen, board, aruco_dict, prior=None, plot=False
             plt.plot([p[0][0] for p in proj_points], [p[0][1] for p in proj_points], "g.", markersize=12)
             plt.show()
     # cv2.projectPoints(points, rvecs, tvecs, mtx, dist)
+
+    print(f"reprojection error: {ret}")
     
-    return [idxs, mtx, dist, rvecs, tvecs]
+    return [idxs, mtx, dist, rvecs, tvecs, corners_list]
 
 def save_coefficients(mtx, dist, path):
     '''Save the camera matrix and the distortion coefficients to given path/file.'''

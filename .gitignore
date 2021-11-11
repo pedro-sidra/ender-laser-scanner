@@ -1,6 +1,7 @@
 *.jpg
 *.pkl
 *.jpeg
+tccenv/
 pics/
 myenv/
 __pycache__/
