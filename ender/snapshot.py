@@ -106,7 +106,7 @@ class MjpgSnapshotterExp(MjpgSnapshotter):
 class GstSnapshotter():
 	"""Uses an opencv camera to take snapshots, using the gstreamer backend. Can configure camera parameters via v4l2
 	"""
-	def __init__(self, gst_params="v4l2src ! video/x-raw,framerate=5/1, width=(int)1280,height=(int)720 ! videoconvert ! appsink max-buffers=1 drop=true",
+	def __init__(self, gst_params="v4l2src ! queue! videoconvert ! video/x-raw,framerate=90/1, width=640,height=480 ! queue ! appsink",# max-buffers=10 drop=true",
 				 *args, **kwargs):
 		"""Init a `cv2.VideoCapture` via gstreamer, disable all automatic parameters
 		:param gst_params: params to pass to gstreamer for video stream initialization
@@ -114,10 +114,10 @@ class GstSnapshotter():
 
 		self.cap = cv2.VideoCapture(gst_params, apiPreference=cv2.CAP_GSTREAMER)
 
-		self._v4l_command(" -c".join(["white_balance_temperature_auto=0",
-		                   			  "exposure_auto=1",
-									  "exposure_auto_priority=0",
-									  "white_balance_temperature=0"]))
+		self._v4l_command(" -c".join([#"-cwhite_balance_temperature_auto=false",
+		                   			  "auto_exposure=0",
+									  #"exposure_auto_priority=0",
+									  ]))
 	
 	def _v4l_command(self, params, retry=1):
 		"""Call v4l2-ctl with the given params, if an error happens retry `retry` times
@@ -152,14 +152,14 @@ class GstSnapshotter():
 	def set_exposure(self, value, wait=0.5):
 		"""Set the exposure using -cexposure=value
 		:param wait:the time to wait before returning for exposure to register"""
-		self._v4l_command(f"-cexposure_absolute={value}")
+		self._v4l_command(f"-cexposure_time_absolute={value}")
 		if wait:
 			time.sleep(wait)
 
 	def set_gain(self, value, wait=True):
 		"""Set the gain using -cgain=value
 		:param wait:whether to wait before returning for gain to register"""
-		self._v4l_command(f"-cgain={value}")
+		self._v4l_command(f"-ciso_sensitivity={value}")
 		if wait:
 			time.sleep(0.5)
 

@@ -14,6 +14,7 @@ import argparse
 from MotionController import MotionController, FakeMotionController
 import threading
 import cv2
+import io
 import time
 import numpy as np
 import sys
@@ -192,8 +193,10 @@ if __name__=="__main__":
             # ------ SAVE PICTURE
             filename= f"{i}.png"
 
+            stream = io.BytesIO()
             if args.low_exp:
-                camera.capture(join(outpath, "low_exp", filename))
+                #camera.capture(join(outpath, "low_exp", filename))
+                camera.capture(stream, "jpeg")
             if args.auto_exp:
                 camera.capture(join(outpath, "auto_exp", filename))
 

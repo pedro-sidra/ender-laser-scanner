@@ -96,7 +96,7 @@ if __name__=="__main__":
 
     #------CONFIG------------------------------------------
     # Take exposures with this absolute config at each point
-    exposures=[50, 100, 500, 1000]
+    exposures=[10, 50, 100, 500]
     # Top and bottom of Z range
     LOW_Z, HIGH_Z = (100, 180)
 
@@ -110,7 +110,7 @@ if __name__=="__main__":
         points.extend(list((125, 125, z) for z in range(HIGH_Z,LOW_Z, -5)))
     
     if args.scan:
-        points.extend(gen_points_line(125, (HIGH_Z + LOW_Z)/2))
+        points.extend(gen_points_line(125, 60))
     
     if args.once:
         points = [[1,2,3]]
@@ -121,6 +121,8 @@ if __name__=="__main__":
 
     if args.save_exps:
         outpath.joinpath("exposures").mkdir(parents=True, exist_ok=True)
+        for i, exp in enumerate(exposures):
+            outpath.joinpath("exposures").joinpath(f"exp_{i}").mkdir(parents=True, exist_ok=True)
 
     print(f"Generating pics of {len(points)} points: ")
     print(points)
@@ -134,6 +136,7 @@ if __name__=="__main__":
         motion = MotionController()
     # To take pictures
     cam = snapshot.GstSnapshotter()
+    time.sleep(5)
     # Set initial params
     cam.set_exposure(50)
     cam.set_gain(1)
@@ -163,7 +166,7 @@ if __name__=="__main__":
             # ------ SAVE EXPOSURES
             if args.save_exps:
                 for i_exp, pic in enumerate(pics):
-                    cv2.imwrite(join(outpath, "exposures", f"{i}_exposure{i_exp}.png"), pic)
+                    cv2.imwrite(join(outpath, "exposures", f"exp_{i_exp}", f"{i}.png"), pic)
 
             # ------ MAKE HDR PICTURE AND SAVE
             pic = hdr(pics, exposures)
